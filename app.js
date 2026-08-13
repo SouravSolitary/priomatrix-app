@@ -1,21 +1,16 @@
 let tasks = JSON.parse(localStorage.getItem('workflow_tasks')) || [];
-let stats = JSON.parse(localStorage.getItem('workflow_stats')) || { completed: 0, hoursSaved: 0, focusMinutes: 0 };
+let userStats = JSON.parse(localStorage.getItem('workflow_user_stats')) || { xp: 0, level: 1, dailyHistory: {} };
 
-const MAX_CAPACITY = 40;
-let currentFilter = 'all';
-let currentCategory = 'all';
-let searchQuery = '';
-let activeTimer = null;
-let timerSeconds = 25 * 60;
+let chartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   setTheme(savedTheme);
+  initChart();
   updateUI();
-  registerServiceWorker();
 });
 
-// Theme Toggle
+// Theme Switcher
 const themeBtn = document.getElementById('theme-toggle');
 themeBtn.addEventListener('click', () => {
   const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
@@ -37,13 +32,11 @@ function setTheme(theme) {
 document.getElementById('impact').oninput = (e) => document.getElementById('impact-val').innerText = e.target.value;
 document.getElementById('confidence').oninput = (e) => document.getElementById('conf-val').innerText = e.target.value + '%';
 
-// Form Submit (Add or Edit Task)
+// Add Task
 document.getElementById('task-form').onsubmit = (e) => {
   e.preventDefault();
   
-  const editId = document.getElementById('task-id').value;
   const title = document.getElementById('title').value;
-  const category = document.getElementById('category').value;
   const impact = parseFloat(document.getElementById('impact').value);
   const confidence = parseFloat(document.getElementById('confidence').value);
   const effort = parseFloat(document.getElementById('effort').value);
@@ -54,202 +47,160 @@ document.getElementById('task-form').onsubmit = (e) => {
   const urgencyBonus = hoursToDue <= 48 && hoursToDue > 0 ? 15 : 0;
   const score = Math.round(((impact * 20) * (confidence / 100)) / Math.max(effort, 0.5) + urgencyBonus);
 
-  const rawSubtasks = document.getElementById('subtasks-input').value;
-  const subtasks = rawSubtasks ? rawSubtasks.split(',').map(s => ({ title: s.trim(), done: false })) : [];
-
-  if (editId) {
-    tasks = tasks.map(t => t.id == editId ? { ...t, title, category, impact, confidence, effort, dueDate: dueDate.toLocaleDateString(), score, subtasks } : t);
-  } else {
-    tasks.push({ id: Date.now(), title, category, impact, confidence, effort, dueDate: dueDate.toLocaleDateString(), score, subtasks });
-  }
-
-  resetForm();
+  tasks.push({ id: Date.now(), title, impact, effort, score, dueDate: dueDate.toLocaleDateString() });
   saveAndRender();
+  e.target.reset();
 };
 
-// Edit Task Initiation
-function editTask(id) {
-  const task = tasks.find(t => t.id === id);
-  if (!task) return;
-
-  document.getElementById('task-id').value = task.id;
-  document.getElementById('title').value = task.title;
-  document.getElementById('category').value = task.category || 'Work';
-  document.getElementById('impact').value = task.impact || 3;
-  document.getElementById('confidence').value = task.confidence || 80;
-  document.getElementById('effort').value = task.effort;
-  document.getElementById('subtasks-input').value = task.subtasks ? task.subtasks.map(s => s.title).join(', ') : '';
-  
-  document.getElementById('form-title').innerText = 'Edit Task';
-  document.getElementById('submit-btn').innerText = 'Update Task';
-  document.getElementById('cancel-edit-btn').classList.remove('hidden');
-}
-
-document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
-
-function resetForm() {
-  document.getElementById('task-form').reset();
-  document.getElementById('task-id').value = '';
-  document.getElementById('form-title').innerText = 'Add New Task';
-  document.getElementById('submit-btn').innerText = 'Calculate & Add Task';
-  document.getElementById('cancel-edit-btn').classList.add('hidden');
-}
-
-// Subtask Toggle
-function toggleSubtask(taskId, subtaskIndex) {
-  const task = tasks.find(t => t.id === taskId);
-  if (task && task.subtasks[subtaskIndex]) {
-    task.subtasks[subtaskIndex].done = !task.subtasks[subtaskIndex].done;
-    saveAndRender();
-  }
-}
-
-// Complete Task
+// Complete Task & Award Reward Points (XP)
 function deleteTask(id) {
-  triggerConfetti();
   const completedTask = tasks.find(t => t.id === id);
   if (completedTask) {
-    stats.completed += 1;
-    stats.hoursSaved += completedTask.effort;
-    localStorage.setItem('workflow_stats', JSON.stringify(stats));
+    // 🏆 Reward Points Logic
+    let earnedXP = 20;
+    if (completedTask.score >= 40) earnedXP = 100;
+    else if (completedTask.score >= 20) earnedXP = 50;
+
+    userStats.xp += earnedXP;
+
+    // Track Daily Efficiency Score
+    const today = new Date().toISOString().split('T')[0];
+    if (!userStats.dailyHistory[today]) userStats.dailyHistory[today] = { impactSum: 0, effortSum: 0 };
+    userStats.dailyHistory[today].impactSum += completedTask.impact;
+    userStats.dailyHistory[today].effortSum += completedTask.effort;
+
+    triggerConfetti();
   }
+
   tasks = tasks.filter(task => task.id !== id);
   saveAndRender();
 }
 
-// Focus Pomodoro Timer Logic
-function startTimer(title) {
-  clearInterval(activeTimer);
-  timerSeconds = 25 * 60;
-  
-  document.getElementById('timer-task-title').innerText = `Focusing on: ${title}`;
-  document.getElementById('timer-bar').classList.remove('hidden');
-  
-  activeTimer = setInterval(() => {
-    timerSeconds--;
-    stats.focusMinutes += 1/60;
-    localStorage.setItem('workflow_stats', JSON.stringify(stats));
-    updateTimerDisplay();
-
-    if (timerSeconds <= 0) {
-      clearInterval(activeTimer);
-      alert('⏰ Pomodoro session completed! Take a 5-minute break.');
-    }
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const mins = Math.floor(timerSeconds / 60);
-  const secs = timerSeconds % 60;
-  document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  document.getElementById('stat-focus').innerText = `${Math.round(stats.focusMinutes)}m`;
-}
-
-document.getElementById('stop-timer-btn').addEventListener('click', () => {
-  clearInterval(activeTimer);
-  document.getElementById('timer-bar').classList.add('hidden');
+// Clear All
+document.getElementById('clear-all-btn').addEventListener('click', () => {
+  if (tasks.length === 0) return;
+  if (confirm('Are you sure you want to clear all active tasks?')) {
+    tasks = [];
+    saveAndRender();
+  }
 });
-
-// Search & Filtering
-document.getElementById('search-input').addEventListener('input', (e) => { searchQuery = e.target.value.toLowerCase(); updateUI(); });
-document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', (e) => {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-  currentFilter = e.target.dataset.filter;
-  updateUI();
-}));
-document.querySelectorAll('.cat-filter-btn').forEach(btn => btn.addEventListener('click', (e) => {
-  document.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-  currentCategory = e.target.dataset.cat;
-  updateUI();
-}));
-
-// Export & Storage
-document.getElementById('export-csv-btn').addEventListener('click', () => {
-  let csv = 'Title,Category,Score,Effort,DueDate\n';
-  tasks.forEach(t => csv += `"${t.title}","${t.category}",${t.score},${t.effort},"${t.dueDate}"\n`);
-  downloadFile(csv, 'priomatrix_tasks.csv', 'text/csv');
-});
-document.getElementById('export-json-btn').addEventListener('click', () => downloadFile(JSON.stringify(tasks, null, 2), 'priomatrix_backup.json', 'application/json'));
-
-function downloadFile(content, fileName, type) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type }));
-  a.download = fileName;
-  a.click();
-}
 
 function saveAndRender() {
   tasks.sort((a, b) => b.score - a.score);
   localStorage.setItem('workflow_tasks', JSON.stringify(tasks));
+  localStorage.setItem('workflow_user_stats', JSON.stringify(userStats));
   updateUI();
 }
 
 function updateUI() {
   const taskList = document.getElementById('task-list');
   taskList.innerHTML = '';
-  let totalEffort = 0;
 
-  // Stats Display
-  document.getElementById('stat-completed').innerText = stats.completed;
-  document.getElementById('stat-hours').innerText = `${stats.hoursSaved}h`;
-  document.getElementById('stat-focus').innerText = `${Math.round(stats.focusMinutes)}m`;
+  if (tasks.length === 0) {
+    taskList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 10px;">No active tasks. Time to add new goals!</p>`;
+  }
 
-  const filtered = tasks.filter(t => {
-    const mSearch = t.title.toLowerCase().includes(searchQuery);
-    let mCat = currentCategory === 'all' || t.category === currentCategory;
-    let mPriority = true;
-    if (currentFilter === 'high') mPriority = t.score >= 40;
-    else if (currentFilter === 'med') mPriority = t.score >= 20 && t.score < 40;
-    else if (currentFilter === 'low') mPriority = t.score < 20;
-    return mSearch && mCat && mPriority;
-  });
-
-  tasks.forEach(t => totalEffort += t.effort);
-
-  if (filtered.length === 0) taskList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 15px;">No active tasks found.</p>`;
-
-  filtered.forEach(task => {
-    let badgeClass = task.score >= 40 ? 'high' : task.score >= 20 ? 'med' : 'low';
-    let badgeText = task.score >= 40 ? '🔥 Do First' : task.score >= 20 ? '📅 Schedule' : '💡 Backlog';
-
-    let subtasksHtml = '';
-    if (task.subtasks && task.subtasks.length > 0) {
-      subtasksHtml = `<ul class="subtask-list">` + task.subtasks.map((s, idx) => `
-        <li class="subtask-item ${s.done ? 'completed' : ''}">
-          <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleSubtask(${task.id}, ${idx})">
-          <span>${s.title}</span>
-        </li>
-      `).join('') + `</ul>`;
-    }
+  tasks.forEach(task => {
+    let badgeClass = 'low';
+    let badgeText = '💡 Backlog (+20 XP)';
+    if (task.score >= 40) { badgeClass = 'high'; badgeText = '🔥 Do First (+100 XP)'; }
+    else if (task.score >= 20) { badgeClass = 'med'; badgeText = '📅 Schedule (+50 XP)'; }
 
     taskList.innerHTML += `
       <div class="task-item">
         <div class="task-header">
-          <div>
-            <strong>${task.title}</strong>
-            <span class="tag">${task.category || 'Work'}</span>
-          </div>
-          <span class="badge ${badgeClass}">${badgeText} (${task.score})</span>
+          <strong>${task.title}</strong>
+          <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
-        ${subtasksHtml}
         <div class="task-footer">
           <span class="task-details">Effort: ${task.effort}h | Due: ${task.dueDate}</span>
-          <div class="task-actions">
-            <button class="timer-btn" onclick="startTimer('${task.title}')">⏱️ Focus</button>
-            <button class="edit-btn" onclick="editTask(${task.id})">✏️</button>
-            <button class="delete-btn" onclick="deleteTask(${task.id})">✓ Done</button>
-          </div>
+          <button class="delete-btn" onclick="deleteTask(${task.id})">✓ Complete</button>
         </div>
       </div>
     `;
   });
 
-  document.getElementById('capacity-text').innerText = `${totalEffort} / ${MAX_CAPACITY} hrs`;
-  const fillElem = document.getElementById('progress-fill');
-  fillElem.style.width = Math.min((totalEffort / MAX_CAPACITY) * 100, 100) + '%';
-  fillElem.style.background = totalEffort > MAX_CAPACITY ? '#ef4444' : '#10b981';
+  updateGamificationDashboard();
+  updateChartData();
+}
+
+function updateGamificationDashboard() {
+  // Level Calculation: Level up every 500 XP
+  const newLevel = Math.floor(userStats.xp / 500) + 1;
+  const currentLevelXP = userStats.xp % 500;
+  const xpPct = (currentLevelXP / 500) * 100;
+
+  userStats.level = newLevel;
+
+  document.getElementById('total-xp').innerText = userStats.xp;
+  document.getElementById('player-level').innerText = `Level ${newLevel}`;
+  document.getElementById('xp-fill').style.width = `${xpPct}%`;
+  document.getElementById('xp-next').innerText = `${currentLevelXP} / 500 XP to Level ${newLevel + 1}`;
+
+  // Title ranks
+  const titles = ['Novice Planner', 'Focus Apprentice', 'Priority Knight', 'Time Master', 'Efficiency Legend'];
+  const rankTitle = titles[Math.min(newLevel - 1, titles.length - 1)];
+  document.getElementById('player-title').innerText = `Rank: ${rankTitle}`;
+}
+
+// Initialize Chart.js Bar Chart
+function initChart() {
+  const ctx = document.getElementById('efficiencyChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Efficiency Rate (%)',
+        data: [],
+        backgroundColor: '#38bdf8',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' } },
+        x: { ticks: { color: '#94a3b8' } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function updateChartData() {
+  if (!chartInstance) return;
+
+  const labels = [];
+  const scores = [];
+
+  // Get last 7 days dates
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+    labels.push(dayName);
+
+    const record = userStats.dailyHistory[dateStr];
+    if (record && record.effortSum > 0) {
+      // Efficiency ratio: (Impact Sum / Effort Sum) converted to 0-100% scale
+      const rate = Math.min(Math.round((record.impactSum / record.effortSum) * 20), 100);
+      scores.push(rate);
+    } else {
+      scores.push(0);
+    }
+  }
+
+  chartInstance.data.labels = labels;
+  chartInstance.data.datasets[0].data = scores;
+  chartInstance.update();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayScore = scores[6] || 0;
+  document.getElementById('today-efficiency').innerText = `Today: ${todayScore}%`;
 }
 
 function triggerConfetti() {
@@ -257,21 +208,23 @@ function triggerConfetti() {
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  const particles = Array.from({ length: 40 }, () => ({
+
+  const particles = Array.from({ length: 50 }, () => ({
     x: canvas.width / 2, y: canvas.height / 2,
-    vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10 - 3,
-    color: ['#10b981', '#38bdf8', '#f59e0b', '#ef4444'][Math.floor(Math.random() * 4)],
+    vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12 - 4,
+    color: ['#fbbf24', '#38bdf8', '#10b981', '#8b5cf6'][Math.floor(Math.random() * 4)],
     size: Math.random() * 6 + 4
   }));
+
   let frame = 0;
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
-    if (++frame < 50) requestAnimationFrame(animate); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.2;
+      ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+    if (++frame < 50) requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
   animate();
-}
-
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 }

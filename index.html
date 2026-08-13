@@ -3,83 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrioMatrix Pro - Priority & Focus Tracker</title>
+  <title>PrioMatrix - Gamified Priority Tracker</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <link rel="apple-touch-icon" href="icon.png">
 
   <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js for Interactive Progress Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dark-theme">
   <div class="container">
     <header>
       <div class="header-top">
-        <h1>PrioMatrix Pro 🎯</h1>
+        <h1>PrioMatrix 🎯</h1>
         <button id="theme-toggle" class="icon-btn">☀️ Light</button>
       </div>
-      <p>Scientific Task Prioritizer & Focus Suite</p>
+      <p>Gamified Scientific Task Prioritizer</p>
     </header>
 
-    <!-- Analytics Dashboard -->
-    <section class="card analytics-card">
-      <h2>📈 Productivity Insights</h2>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <span class="stat-num" id="stat-completed">0</span>
-          <span class="stat-label">Tasks Done</span>
+    <!-- Gamification & Level Dashboard -->
+    <section class="card level-card">
+      <div class="level-header">
+        <div>
+          <span id="player-title" class="title-badge">Rank: Novice Planner</span>
+          <h2 id="player-level" style="font-size: 1.4rem;">Level 1</h2>
         </div>
-        <div class="stat-box">
-          <span class="stat-num" id="stat-hours">0h</span>
-          <span class="stat-label">Time Saved</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-num" id="stat-focus">0m</span>
-          <span class="stat-label">Focus Time</span>
+        <div class="xp-display">
+          <span id="total-xp">0</span> <small>XP</small>
         </div>
       </div>
+      <div class="progress-bar" style="margin-top: 10px;">
+        <div id="xp-fill" style="background: #8b5cf6; width: 0%;"></div>
+      </div>
+      <span id="xp-next" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">0 / 500 XP to Level 2</span>
     </section>
 
-    <!-- Active Pomodoro Timer Bar -->
-    <section id="timer-bar" class="card timer-card hidden">
-      <div class="timer-info">
-        <span id="timer-task-title">Working on Task...</span>
-        <span id="timer-display" class="timer-clock">25:00</span>
-      </div>
-      <div class="timer-controls">
-        <button id="pause-timer-btn" class="secondary-btn">Pause</button>
-        <button id="stop-timer-btn" class="danger-btn">Stop</button>
-      </div>
-    </section>
-
-    <!-- Workload Progress Bar -->
-    <section class="card capacity-card">
-      <div class="capacity-header">
-        <span>Workload Capacity</span>
-        <span id="capacity-text">0 / 40 hrs</span>
-      </div>
-      <div class="progress-bar">
-        <div id="progress-fill"></div>
-      </div>
-    </section>
-
-    <!-- Add/Edit Task Form -->
+    <!-- 7-Day Efficiency Chart -->
     <section class="card">
-      <h2 id="form-title">Add New Task</h2>
+      <div class="list-header">
+        <h2>📈 7-Day Efficiency Score</h2>
+        <span id="today-efficiency" class="badge high">Today: 0%</span>
+      </div>
+      <div style="height: 180px; margin-top: 10px;">
+        <canvas id="efficiencyChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Add Task Form -->
+    <section class="card">
+      <h2>Add New Task</h2>
       <form id="task-form">
-        <input type="hidden" id="task-id">
         <input type="text" id="title" placeholder="Task Title" required>
         
-        <div class="form-group">
-          <label>Category Tag:</label>
-          <select id="category">
-            <option value="Work">💼 Work</option>
-            <option value="Personal">🏠 Personal</option>
-            <option value="Study">📚 Study</option>
-            <option value="Project">🚀 Side Project</option>
-          </select>
-        </div>
-
         <div class="form-group">
           <label>Impact (1-5): <span id="impact-val">3</span></label>
           <input type="range" id="impact" min="1" max="5" value="3">
@@ -100,46 +77,16 @@
           <input type="date" id="due-date" required>
         </div>
 
-        <div class="form-group">
-          <label>Subtasks (Comma Separated):</label>
-          <input type="text" id="subtasks-input" placeholder="Draft outline, Review code, Submit">
-        </div>
-
-        <button type="submit" id="submit-btn" class="btn">Calculate & Add Task</button>
-        <button type="button" id="cancel-edit-btn" class="secondary-btn hidden" style="width: 100%; margin-top: 8px;">Cancel Edit</button>
+        <button type="submit" class="btn">Calculate & Add Task</button>
       </form>
     </section>
 
-    <!-- Search, Category Filters, & Actions -->
+    <!-- Task List -->
     <section class="card">
-      <div class="filter-controls">
-        <input type="text" id="search-input" placeholder="🔍 Search tasks...">
-        
-        <div class="filter-buttons">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="high">🔥 Do First</button>
-          <button class="filter-btn" data-filter="med">📅 Schedule</button>
-          <button class="filter-btn" data-filter="low">💡 Backlog</button>
-        </div>
-
-        <div class="filter-buttons">
-          <button class="cat-filter-btn active" data-cat="all">All Categories</button>
-          <button class="cat-filter-btn" data-cat="Work">💼 Work</button>
-          <button class="cat-filter-btn" data-cat="Personal">🏠 Personal</button>
-          <button class="cat-filter-btn" data-cat="Study">📚 Study</button>
-          <button class="cat-filter-btn" data-cat="Project">🚀 Project</button>
-        </div>
-      </div>
-
-      <div class="list-header" style="margin-top: 15px;">
+      <div class="list-header">
         <h2>Prioritized Tasks</h2>
-        <div class="action-buttons">
-          <button id="export-csv-btn" class="secondary-btn">📊 CSV</button>
-          <button id="export-json-btn" class="secondary-btn">💾 Backup</button>
-          <button id="clear-all-btn" class="danger-btn">Clear All</button>
-        </div>
+        <button id="clear-all-btn" class="danger-btn">Clear All</button>
       </div>
-
       <div id="task-list"></div>
     </section>
   </div>
