@@ -65,7 +65,7 @@ header p {
   border: 1px solid var(--border-color);
 }
 
-/* Level & Streak Card */
+/* Level & Gamification Card */
 .level-card {
   background: linear-gradient(135deg, #1e1b4b, #311b92);
   border-color: #6366f1;
@@ -123,6 +123,64 @@ header p {
   font-weight: bold;
 }
 
+/* ⏱️ Pomodoro Card */
+.pomodoro-card {
+  background: linear-gradient(135deg, #0f172a, #1e1b4b);
+  text-align: center;
+  border-color: #38bdf8;
+}
+
+.pomo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pomo-badge {
+  font-size: 0.75rem;
+  background: #38bdf8;
+  color: #0f172a;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.pomo-active-task {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pomo-timer-display {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 2px;
+  margin: 10px 0;
+}
+
+.pomo-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pomo-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.pomo-btn.start { background: #10b981; color: white; }
+.pomo-btn.pause { background: #f59e0b; color: white; }
+.pomo-btn.reset { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
+
 .form-group {
   margin: 12px 0;
 }
@@ -136,7 +194,8 @@ label {
 
 input[type="text"],
 input[type="number"],
-input[type="date"] {
+input[type="date"],
+select {
   width: 100%;
   padding: 10px;
   border-radius: 6px;
@@ -162,9 +221,7 @@ input[type="range"] {
   transition: background 0.2s;
 }
 
-.btn:hover {
-  background: #1d4ed8;
-}
+.btn:hover { background: #1d4ed8; }
 
 .icon-btn {
   background: var(--card-bg);
@@ -184,7 +241,7 @@ input[type="range"] {
   overflow: hidden;
 }
 
-#xp-fill {
+#xp-fill, #goal-fill {
   height: 100%;
   transition: width 0.4s ease;
 }
@@ -205,24 +262,22 @@ input[type="range"] {
   cursor: pointer;
 }
 
-.danger-btn:hover {
-  background: #b91c1c;
-}
+.danger-btn:hover { background: #b91c1c; }
 
 /* Filter Tabs */
 .filter-tabs {
   display: flex;
   gap: 6px;
-  margin: 12px 0;
+  margin: 10px 0;
   overflow-x: auto;
   padding-bottom: 4px;
 }
 
-.filter-btn {
+.filter-btn, .tag-filter-btn {
   background: var(--input-bg);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 16px;
   font-size: 0.75rem;
   font-weight: bold;
@@ -230,13 +285,13 @@ input[type="range"] {
   white-space: nowrap;
 }
 
-.filter-btn.active {
+.filter-btn.active, .tag-filter-btn.active {
   background: #2563eb;
   color: white;
   border-color: #2563eb;
 }
 
-/* Task Items */
+/* Task Cards */
 .task-item {
   background: var(--input-bg);
   border-left: 4px solid #38bdf8;
@@ -259,6 +314,15 @@ input[type="range"] {
   font-weight: bold;
 }
 
+.tag-label {
+  font-size: 0.7rem;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
 .high { background: #ef4444; color: white; }
 .med  { background: #f59e0b; color: white; }
 .low  { background: #10b981; color: white; }
@@ -271,36 +335,45 @@ input[type="range"] {
 }
 
 .task-details {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.action-btn:hover { background: var(--border-color); }
 
 .delete-btn {
   background: #10b981;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-.delete-btn:hover {
-  background: #059669;
-}
+.delete-btn:hover { background: #059669; }
 
-/* Backup Actions */
-.backup-card h3 {
-  font-size: 0.95rem;
-  margin-bottom: 10px;
-}
-
-.backup-actions {
-  display: flex;
-  gap: 10px;
-}
+/* Backup Section */
+.backup-card h3 { font-size: 0.95rem; margin-bottom: 10px; }
+.backup-actions { display: flex; gap: 10px; }
 
 .secondary-btn {
   flex: 1;
@@ -312,12 +385,9 @@ input[type="range"] {
   font-size: 0.8rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-.secondary-btn:hover {
-  background: var(--border-color);
-}
+.secondary-btn:hover { background: var(--border-color); }
 
 /* Level-Up Modal Overlay */
 .modal-overlay {
@@ -366,23 +436,9 @@ input[type="range"] {
   margin-bottom: 8px;
 }
 
-.modal-content h2 {
-  font-size: 2rem;
-  color: #ffffff;
-  margin-bottom: 4px;
-}
-
-#modal-rank-text {
-  color: #a7f3d0;
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-.modal-sub {
-  color: #cbd5e1;
-  font-size: 0.8rem;
-  margin: 12px 0 16px 0;
-}
+.modal-content h2 { font-size: 2rem; color: #ffffff; margin-bottom: 4px; }
+#modal-rank-text { color: #a7f3d0; font-size: 1rem; font-weight: bold; }
+.modal-sub { color: #cbd5e1; font-size: 0.8rem; margin: 12px 0 16px 0; }
 
 #confetti-canvas {
   position: fixed;
