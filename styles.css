@@ -39,10 +39,19 @@ input[type="range"] { width: 100%; }
 .progress-bar { width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden; margin-top: 6px; }
 #progress-fill { height: 100%; width: 0%; background: #10b981; transition: width 0.3s; }
 
-.list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+/* Filter & Action Bar Styles */
+.filter-controls { display: flex; flex-direction: column; gap: 10px; }
+.filter-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-muted); font-size: 0.75rem; cursor: pointer; }
+.filter-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+.list-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.action-buttons { display: flex; gap: 6px; }
+.secondary-btn { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
 .danger-btn { background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
 
-.task-item { background: var(--input-bg); border-left: 4px solid #38bdf8; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+/* Task Items */
+.task-item { background: var(--input-bg); border-left: 4px solid #38bdf8; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); transition: transform 0.2s; }
 .task-header { display: flex; justify-content: space-between; align-items: center; }
 .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
 .high { background: #ef4444; color: white; }
@@ -50,4 +59,7 @@ input[type="range"] { width: 100%; }
 .low { background: #10b981; color: white; }
 .task-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
 .task-details { font-size: 0.8rem; color: var(--text-muted); }
-.delete-btn { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+.delete-btn { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+
+/* Canvas Overlay */
+#confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999; }
