@@ -4,10 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrioMatrix - Gamified Task & Productivity Hub</title>
+  
+  <!-- 📱 Home Screen App Shortcut Icons & Web App Metadata -->
+  <link rel="apple-touch-icon" href="https://img.icons8.com/isometric/512/000000/task.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="https://img.icons8.com/isometric/512/000000/task.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PrioMatrix" />
+  <meta name="theme-color" content="#0f172a" />
+
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    /* Styling to ensure logo layout renders consistently across environments */
+    /* Embedded SVG wrapper for guaranteed header rendering across all environments */
     .brand-logo-wrapper {
       width: 44px;
       height: 44px;
@@ -32,7 +42,7 @@
     <header>
       <div class="header-top">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <!-- 🎨 Self-contained SVG Logo Container -->
+          <!-- 🎨 Header Logo Container -->
           <div class="brand-logo-wrapper"></div>
           <h1>PrioMatrix</h1>
         </div>
