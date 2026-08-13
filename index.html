@@ -14,11 +14,25 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dark-theme">
+
+  <!-- Level-Up Modal Overlay -->
+  <div id="levelup-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-badge">🏆 LEVEL UP!</div>
+      <h2 id="modal-level-title">Level 2!</h2>
+      <p id="modal-rank-text">Rank: Focus Apprentice</p>
+      <p class="modal-sub">1.5x Streak Bonus Active! Keep the momentum going!</p>
+      <button id="modal-close-btn" class="btn">Awesome! 🚀</button>
+    </div>
+  </div>
+
   <div class="container">
     <header>
       <div class="header-top">
         <h1>PrioMatrix 🎯</h1>
-        <button id="theme-toggle" class="icon-btn">☀️ Light</button>
+        <div class="header-actions">
+          <button id="theme-toggle" class="icon-btn">☀️ Light</button>
+        </div>
       </div>
       <p>Gamified Scientific Task Prioritizer</p>
     </header>
@@ -28,16 +42,22 @@
       <div class="level-header">
         <div>
           <span id="player-title" class="title-badge">Rank: Novice Planner</span>
-          <h2 id="player-level" style="font-size: 1.4rem;">Level 1</h2>
+          <h2 id="player-level" style="font-size: 1.4rem; color: #ffffff; margin-top: 2px;">Level 1</h2>
         </div>
-        <div class="xp-display">
-          <span id="total-xp">0</span> <small>XP</small>
+        <div class="stats-right">
+          <div class="streak-badge" id="streak-display">🔥 0 Day Streak</div>
+          <div class="xp-display">
+            <span id="total-xp">0</span> <small style="font-size: 0.9rem;">XP</small>
+          </div>
         </div>
       </div>
       <div class="progress-bar" style="margin-top: 10px;">
         <div id="xp-fill" style="background: #8b5cf6; width: 0%;"></div>
       </div>
-      <span id="xp-next" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">0 / 500 XP to Level 2</span>
+      <div class="level-footer">
+        <span id="xp-next">0 / 500 XP to Level 2</span>
+        <span id="multiplier-badge" class="multiplier-tag">1.0x XP</span>
+      </div>
     </section>
 
     <!-- 7-Day Efficiency Chart -->
@@ -55,7 +75,10 @@
     <section class="card">
       <h2>Add New Task</h2>
       <form id="task-form">
-        <input type="text" id="title" placeholder="Task Title" required>
+        <div class="form-group">
+          <label for="title">Task Title:</label>
+          <input type="text" id="title" placeholder="e.g., Redesign landing page" required>
+        </div>
         
         <div class="form-group">
           <label>Impact (1-5): <span id="impact-val">3</span></label>
@@ -68,12 +91,12 @@
         </div>
 
         <div class="form-group">
-          <label>Effort (Hours):</label>
+          <label for="effort">Effort (Hours):</label>
           <input type="number" id="effort" min="0.5" step="0.5" value="2" required>
         </div>
 
         <div class="form-group">
-          <label>Due Date:</label>
+          <label for="due-date">Due Date:</label>
           <input type="date" id="due-date" required>
         </div>
 
@@ -81,13 +104,32 @@
       </form>
     </section>
 
-    <!-- Task List -->
+    <!-- Task List & Filters -->
     <section class="card">
       <div class="list-header">
         <h2>Prioritized Tasks</h2>
         <button id="clear-all-btn" class="danger-btn">Clear All</button>
       </div>
+
+      <!-- Quick Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="high">🔥 Do First</button>
+        <button class="filter-btn" data-filter="med">📅 Schedule</button>
+        <button class="filter-btn" data-filter="low">💡 Backlog</button>
+      </div>
+
       <div id="task-list"></div>
+    </section>
+
+    <!-- Backup & Restore Data Controls -->
+    <section class="card backup-card">
+      <h3>💾 Backup & Data Management</h3>
+      <div class="backup-actions">
+        <button id="export-btn" class="secondary-btn">📤 Export Backup (JSON)</button>
+        <button id="import-btn-trigger" class="secondary-btn">📥 Import Backup</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;">
+      </div>
     </section>
   </div>
 
