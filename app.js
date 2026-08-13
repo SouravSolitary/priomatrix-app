@@ -5,12 +5,22 @@ let userStats = JSON.parse(localStorage.getItem('workflow_user_stats')) || {
   level: 1, 
   streak: 0,
   lastCompletedDate: null,
+  weeklyTarget: 10,
+  weeklyProgress: 0,
+  lastResetWeek: null,
   dailyHistory: {} 
 };
 
 let activeFilter = 'all';
+let activeTag = 'all';
 let chartInstance = null;
 let audioCtx = null;
+
+// ⏱️ Pomodoro Timer State
+let pomoTimeLeft = 25 * 60;
+let pomoTimerId = null;
+let pomoIsWork = true;
+let activePomoTask = null;
 
 function initAudio() {
   if (!audioCtx) {
@@ -35,12 +45,11 @@ function playSound(type) {
   const now = audioCtx.currentTime;
 
   if (type === 'complete') {
-    // Task Complete Chime
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, now);        // C5
-    osc.frequency.setValueAtTime(659.25, now + 0.1);  // E5
-    osc.frequency.setValueAtTime(783.99, now + 0.2);  // G5
-    osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.setValueAtTime(659.25, now + 0.1);
+    osc.frequency.setValueAtTime(783.99, now + 0.2);
+    osc.frequency.setValueAtTime(1046.50, now + 0.3);
 
     gain.gain.setValueAtTime(0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
@@ -48,7 +57,6 @@ function playSound(type) {
     osc.start(now);
     osc.stop(now + 0.6);
   } else if (type === 'add') {
-    // Quick Pop
     osc.type = 'sine';
     osc.frequency.setValueAtTime(400, now);
     osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
@@ -59,33 +67,62 @@ function playSound(type) {
     osc.start(now);
     osc.stop(now + 0.08);
   } else if (type === 'levelup') {
-    // Fanfare Chime
     osc.type = 'square';
-    osc.frequency.setValueAtTime(440, now);          // A4
-    osc.frequency.setValueAtTime(554.37, now + 0.15); // C#5
-    osc.frequency.setValueAtTime(659.25, now + 0.3);  // E5
-    osc.frequency.setValueAtTime(880, now + 0.45);    // A5
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(554.37, now + 0.15);
+    osc.frequency.setValueAtTime(659.25, now + 0.3);
+    osc.frequency.setValueAtTime(880, now + 0.45);
 
     gain.gain.setValueAtTime(0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
 
     osc.start(now);
     osc.stop(now + 0.9);
+  } else if (type === 'pomo-end') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.setValueAtTime(1174.66, now + 0.2);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    osc.start(now);
+    osc.stop(now + 0.5);
   }
 }
 
-// App Initialization
+// Initialization
 document.addEventListener('DOMContentLoaded', () => {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   setTheme(savedTheme);
   checkStreakValidity();
+  checkWeeklyReset();
   initChart();
   setupFilterListeners();
   setupBackupListeners();
+  setupPomodoroControls();
+  setupGoalEditListener();
   updateUI();
 });
 
-// Streak Verification Logic
+// 🎯 Weekly Goal Reset Check
+function checkWeeklyReset() {
+  const currentWeek = getWeekNumber(new Date());
+  if (userStats.lastResetWeek !== currentWeek) {
+    userStats.weeklyProgress = 0;
+    userStats.lastResetWeek = currentWeek;
+    localStorage.setItem('workflow_user_stats', JSON.stringify(userStats));
+  }
+}
+
+function getWeekNumber(d) {
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Streak Verification
 function checkStreakValidity() {
   if (!userStats.lastCompletedDate) return;
 
@@ -96,7 +133,6 @@ function checkStreakValidity() {
   const diffTime = Math.abs(today - lastDate);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // If more than 1 day missed, reset streak
   if (diffDays > 1) {
     userStats.streak = 0;
     localStorage.setItem('workflow_user_stats', JSON.stringify(userStats));
@@ -142,7 +178,7 @@ function setTheme(theme) {
   localStorage.setItem('theme', theme);
 }
 
-// Form Range Updates
+// Slider Live Updates
 document.getElementById('impact').oninput = (e) => {
   document.getElementById('impact-val').innerText = e.target.value;
 };
@@ -156,6 +192,7 @@ document.getElementById('task-form').onsubmit = (e) => {
   playSound('add');
 
   const title = document.getElementById('title').value;
+  const tag = document.getElementById('tag').value;
   const impact = parseFloat(document.getElementById('impact').value);
   const confidence = parseFloat(document.getElementById('confidence').value);
   const effort = parseFloat(document.getElementById('effort').value);
@@ -169,9 +206,11 @@ document.getElementById('task-form').onsubmit = (e) => {
   tasks.push({ 
     id: Date.now(), 
     title, 
+    tag,
     impact, 
     effort, 
     score, 
+    dueDateISO: dueDateInput,
     dueDate: dueDate.toLocaleDateString() 
   });
 
@@ -188,7 +227,8 @@ function deleteTask(id) {
   if (completedTask) {
     updateStreakOnCompletion();
 
-    // Calculate XP with Streak Multiplier
+    userStats.weeklyProgress = (userStats.weeklyProgress || 0) + 1;
+
     const multiplier = userStats.streak >= 2 ? 1.5 : 1.0;
     let baseXP = 20;
     if (completedTask.score >= 40) baseXP = 100;
@@ -200,7 +240,6 @@ function deleteTask(id) {
     userStats.xp += earnedXP;
     const newLevel = Math.floor(userStats.xp / 500) + 1;
 
-    // Daily Efficiency Tracking
     const today = new Date().toISOString().split('T')[0];
     if (!userStats.dailyHistory[today]) {
       userStats.dailyHistory[today] = { impactSum: 0, effortSum: 0 };
@@ -210,7 +249,6 @@ function deleteTask(id) {
 
     triggerConfetti();
 
-    // Level-Up Celebration trigger
     if (newLevel > oldLevel) {
       setTimeout(() => triggerLevelUpModal(newLevel), 300);
     } else {
@@ -242,10 +280,11 @@ function saveAndRender() {
 function updateUI() {
   renderTaskList();
   updateGamificationDashboard();
+  updateWeeklyGoalTracker();
   updateChartData();
 }
 
-// Filter Listeners Setup
+// Filters setup
 function setupFilterListeners() {
   const filterBtns = document.querySelectorAll('.filter-btn');
   filterBtns.forEach(btn => {
@@ -256,6 +295,16 @@ function setupFilterListeners() {
       renderTaskList();
     });
   });
+
+  const tagBtns = document.querySelectorAll('.tag-filter-btn');
+  tagBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tagBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTag = btn.getAttribute('data-tag');
+      renderTaskList();
+    });
+  });
 }
 
 function renderTaskList() {
@@ -263,14 +312,18 @@ function renderTaskList() {
   taskList.innerHTML = '';
 
   const filteredTasks = tasks.filter(task => {
-    if (activeFilter === 'high') return task.score >= 40;
-    if (activeFilter === 'med') return task.score >= 20 && task.score < 40;
-    if (activeFilter === 'low') return task.score < 20;
-    return true; // 'all'
+    let matchesPriority = true;
+    if (activeFilter === 'high') matchesPriority = task.score >= 40;
+    else if (activeFilter === 'med') matchesPriority = task.score >= 20 && task.score < 40;
+    else if (activeFilter === 'low') matchesPriority = task.score < 20;
+
+    let matchesTag = activeTag === 'all' || task.tag === activeTag;
+
+    return matchesPriority && matchesTag;
   });
 
   if (filteredTasks.length === 0) {
-    taskList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 12px;">No matching tasks in this category.</p>`;
+    taskList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 12px;">No matching tasks found.</p>`;
     return;
   }
 
@@ -285,15 +338,29 @@ function renderTaskList() {
       badgeText = '📅 Schedule (+50 XP)'; 
     }
 
+    const tagEmoji = { Work: '💼', Personal: '👤', Study: '📚', Health: '🏋️' }[task.tag] || '🏷️';
+    
+    // Calendar Links
+    const gCalUrl = createGoogleCalendarUrl(task);
+    const icsData = createIcalDataUrl(task);
+
     taskList.innerHTML += `
       <div class="task-item">
         <div class="task-header">
-          <strong>${escapeHtml(task.title)}</strong>
+          <div>
+            <strong>${escapeHtml(task.title)}</strong>
+            <span class="tag-label">${tagEmoji} ${task.tag || 'General'}</span>
+          </div>
           <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
         <div class="task-footer">
           <span class="task-details">Effort: ${task.effort}h | Due: ${task.dueDate}</span>
-          <button class="delete-btn" onclick="deleteTask(${task.id})">✓ Complete</button>
+          <div class="task-actions">
+            <button class="action-btn" onclick="attachToPomo('${escapeHtml(task.title)}')">⏱️ Focus</button>
+            <a href="${gCalUrl}" target="_blank" class="action-btn" title="Add to Google Calendar">📅 GCal</a>
+            <a href="${icsData}" download="${task.title}.ics" class="action-btn" title="Download iCal .ics file">📥 iCal</a>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">✓ Complete</button>
+          </div>
         </div>
       </div>
     `;
@@ -304,6 +371,118 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, function(m) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
+}
+
+// 📅 Calendar URL Generators
+function createGoogleCalendarUrl(task) {
+  const dateStr = (task.dueDateISO || new Date().toISOString().split('T')[0]).replace(/-/g, '');
+  const title = encodeURIComponent(`PrioMatrix Task: ${task.title}`);
+  const details = encodeURIComponent(`Priority Score: ${task.score} | Estimated Effort: ${task.effort} hours.`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}`;
+}
+
+function createIcalDataUrl(task) {
+  const dateStr = (task.dueDateISO || new Date().toISOString().split('T')[0]).replace(/-/g, '');
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${task.title}
+DESCRIPTION:Priority Score: ${task.score} | Effort: ${task.effort}h
+DTSTART;VALUE=DATE:${dateStr}
+END:VEVENT
+END:VCALENDAR`;
+  return 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsContent);
+}
+
+// 🎯 Weekly Goal Tracker UI Update
+function updateWeeklyGoalTracker() {
+  const target = userStats.weeklyTarget || 10;
+  const progress = userStats.weeklyProgress || 0;
+  const pct = Math.min(Math.round((progress / target) * 100), 100);
+
+  document.getElementById('goal-target-num').innerText = target;
+  document.getElementById('goal-fill').style.width = `${pct}%`;
+  document.getElementById('goal-text').innerText = `${progress} / ${target} tasks completed this week`;
+  document.getElementById('goal-percent').innerText = `${pct}%`;
+}
+
+function setupGoalEditListener() {
+  document.getElementById('edit-goal-btn').addEventListener('click', () => {
+    const newTarget = prompt('Set your weekly target completed tasks:', userStats.weeklyTarget || 10);
+    if (newTarget && !isNaN(newTarget) && parseInt(newTarget) > 0) {
+      userStats.weeklyTarget = parseInt(newTarget);
+      saveAndRender();
+    }
+  });
+}
+
+// ⏱️ Pomodoro Focus Timer Logic
+function setupPomodoroControls() {
+  document.getElementById('pomo-start-btn').addEventListener('click', startPomoTimer);
+  document.getElementById('pomo-pause-btn').addEventListener('click', pausePomoTimer);
+  document.getElementById('pomo-reset-btn').addEventListener('click', resetPomoTimer);
+}
+
+function attachToPomo(taskTitle) {
+  activePomoTask = taskTitle;
+  document.getElementById('pomo-task-name').innerText = `Active Task: ${taskTitle}`;
+  resetPomoTimer();
+}
+
+function startPomoTimer() {
+  if (pomoTimerId) return;
+  initAudio();
+  
+  document.getElementById('pomo-start-btn').style.display = 'none';
+  document.getElementById('pomo-pause-btn').style.display = 'inline-block';
+
+  pomoTimerId = setInterval(() => {
+    pomoTimeLeft--;
+    updatePomoDisplay();
+
+    if (pomoTimeLeft <= 0) {
+      clearInterval(pomoTimerId);
+      pomoTimerId = null;
+      playSound('pomo-end');
+
+      if (pomoIsWork) {
+        alert('Work Session Finished! Time for a 5-minute break.');
+        pomoIsWork = false;
+        pomoTimeLeft = 5 * 60;
+        document.getElementById('pomo-status').innerText = '5m Break';
+        document.getElementById('pomo-status').style.background = '#10b981';
+      } else {
+        alert('Break Over! Ready to lock back in?');
+        pomoIsWork = true;
+        pomoTimeLeft = 25 * 60;
+        document.getElementById('pomo-status').innerText = 'Work Session';
+        document.getElementById('pomo-status').style.background = '#38bdf8';
+      }
+      resetPomoTimer();
+    }
+  }, 1000);
+}
+
+function pausePomoTimer() {
+  clearInterval(pomoTimerId);
+  pomoTimerId = null;
+  document.getElementById('pomo-start-btn').style.display = 'inline-block';
+  document.getElementById('pomo-pause-btn').style.display = 'none';
+}
+
+function resetPomoTimer() {
+  pausePomoTimer();
+  pomoIsWork = true;
+  pomoTimeLeft = 25 * 60;
+  document.getElementById('pomo-status').innerText = 'Work Session';
+  document.getElementById('pomo-status').style.background = '#38bdf8';
+  updatePomoDisplay();
+}
+
+function updatePomoDisplay() {
+  const mins = Math.floor(pomoTimeLeft / 60);
+  const secs = pomoTimeLeft % 60;
+  document.getElementById('pomo-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 function updateGamificationDashboard() {
@@ -322,13 +501,12 @@ function updateGamificationDashboard() {
   const rankTitle = titles[Math.min(newLevel - 1, titles.length - 1)];
   document.getElementById('player-title').innerText = `Rank: ${rankTitle}`;
 
-  // Streak & Multiplier UI
   document.getElementById('streak-display').innerText = `🔥 ${userStats.streak} Day Streak`;
   const multiplier = userStats.streak >= 2 ? '1.5x XP' : '1.0x XP';
   document.getElementById('multiplier-badge').innerText = multiplier;
 }
 
-// Level Up Celebration Modal
+// Level Up Modal
 function triggerLevelUpModal(level) {
   playSound('levelup');
 
@@ -346,22 +524,16 @@ function triggerLevelUpModal(level) {
   };
 }
 
-// Backup & Import Data Management
+// Backup & Import
 function setupBackupListeners() {
   document.getElementById('export-btn').addEventListener('click', exportBackupJSON);
-  
   const importInput = document.getElementById('import-file');
   document.getElementById('import-btn-trigger').addEventListener('click', () => importInput.click());
   importInput.addEventListener('change', importBackupJSON);
 }
 
 function exportBackupJSON() {
-  const data = {
-    tasks,
-    userStats,
-    exportDate: new Date().toISOString()
-  };
-
+  const data = { tasks, userStats, exportDate: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

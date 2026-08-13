@@ -1,140 +1,449 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrioMatrix - Gamified Priority Tracker</title>
-  
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icon.png">
+:root {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --input-bg: #0f172a;
+}
 
-  <link rel="stylesheet" href="styles.css">
-  <!-- Chart.js for Interactive Progress Graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="dark-theme">
+body.light-theme {
+  --bg-color: #f1f5f9;
+  --card-bg: #ffffff;
+  --text-color: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+}
 
-  <!-- Level-Up Modal Overlay -->
-  <div id="levelup-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-badge">🏆 LEVEL UP!</div>
-      <h2 id="modal-level-title">Level 2!</h2>
-      <p id="modal-rank-text">Rank: Focus Apprentice</p>
-      <p class="modal-sub">1.5x Streak Bonus Active! Keep the momentum going!</p>
-      <button id="modal-close-btn" class="btn">Awesome! 🚀</button>
-    </div>
-  </div>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
-  <div class="container">
-    <header>
-      <div class="header-top">
-        <h1>PrioMatrix 🎯</h1>
-        <div class="header-actions">
-          <button id="theme-toggle" class="icon-btn">☀️ Light</button>
-        </div>
-      </div>
-      <p>Gamified Scientific Task Prioritizer</p>
-    </header>
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 15px;
+  transition: background 0.3s, color 0.3s;
+}
 
-    <!-- Gamification & Level Dashboard -->
-    <section class="card level-card">
-      <div class="level-header">
-        <div>
-          <span id="player-title" class="title-badge">Rank: Novice Planner</span>
-          <h2 id="player-level" style="font-size: 1.4rem; color: #ffffff; margin-top: 2px;">Level 1</h2>
-        </div>
-        <div class="stats-right">
-          <div class="streak-badge" id="streak-display">🔥 0 Day Streak</div>
-          <div class="xp-display">
-            <span id="total-xp">0</span> <small style="font-size: 0.9rem;">XP</small>
-          </div>
-        </div>
-      </div>
-      <div class="progress-bar" style="margin-top: 10px;">
-        <div id="xp-fill" style="background: #8b5cf6; width: 0%;"></div>
-      </div>
-      <div class="level-footer">
-        <span id="xp-next">0 / 500 XP to Level 2</span>
-        <span id="multiplier-badge" class="multiplier-tag">1.0x XP</span>
-      </div>
-    </section>
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-    <!-- 7-Day Efficiency Chart -->
-    <section class="card">
-      <div class="list-header">
-        <h2>📈 7-Day Efficiency Score</h2>
-        <span id="today-efficiency" class="badge high">Today: 0%</span>
-      </div>
-      <div style="height: 180px; margin-top: 10px;">
-        <canvas id="efficiencyChart"></canvas>
-      </div>
-    </section>
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-    <!-- Add Task Form -->
-    <section class="card">
-      <h2>Add New Task</h2>
-      <form id="task-form">
-        <div class="form-group">
-          <label for="title">Task Title:</label>
-          <input type="text" id="title" placeholder="e.g., Redesign landing page" required>
-        </div>
-        
-        <div class="form-group">
-          <label>Impact (1-5): <span id="impact-val">3</span></label>
-          <input type="range" id="impact" min="1" max="5" value="3">
-        </div>
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-        <div class="form-group">
-          <label>Confidence (%): <span id="conf-val">80%</span></label>
-          <input type="range" id="confidence" min="10" max="100" value="80" step="10">
-        </div>
+header h1 {
+  color: #38bdf8;
+  font-size: 1.8rem;
+}
 
-        <div class="form-group">
-          <label for="effort">Effort (Hours):</label>
-          <input type="number" id="effort" min="0.5" step="0.5" value="2" required>
-        </div>
+header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
 
-        <div class="form-group">
-          <label for="due-date">Due Date:</label>
-          <input type="date" id="due-date" required>
-        </div>
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+}
 
-        <button type="submit" class="btn">Calculate & Add Task</button>
-      </form>
-    </section>
+/* Level & Gamification Card */
+.level-card {
+  background: linear-gradient(135deg, #1e1b4b, #311b92);
+  border-color: #6366f1;
+}
 
-    <!-- Task List & Filters -->
-    <section class="card">
-      <div class="list-header">
-        <h2>Prioritized Tasks</h2>
-        <button id="clear-all-btn" class="danger-btn">Clear All</button>
-      </div>
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 
-      <!-- Quick Filter Tabs -->
-      <div class="filter-tabs">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="high">🔥 Do First</button>
-        <button class="filter-btn" data-filter="med">📅 Schedule</button>
-        <button class="filter-btn" data-filter="low">💡 Backlog</button>
-      </div>
+.stats-right {
+  text-align: right;
+}
 
-      <div id="task-list"></div>
-    </section>
+.title-badge {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: #a7f3d0;
+}
 
-    <!-- Backup & Restore Data Controls -->
-    <section class="card backup-card">
-      <h3>💾 Backup & Data Management</h3>
-      <div class="backup-actions">
-        <button id="export-btn" class="secondary-btn">📤 Export Backup (JSON)</button>
-        <button id="import-btn-trigger" class="secondary-btn">📥 Import Backup</button>
-        <input type="file" id="import-file" accept=".json" style="display: none;">
-      </div>
-    </section>
-  </div>
+.streak-badge {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #ff7849;
+  background: rgba(255, 120, 73, 0.15);
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
 
-  <canvas id="confetti-canvas"></canvas>
+.xp-display {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #fbbf24;
+}
 
-  <script src="app.js"></script>
-</body>
-</html>
+.level-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.multiplier-tag {
+  background: #10b981;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* ⏱️ Pomodoro Card */
+.pomodoro-card {
+  background: linear-gradient(135deg, #0f172a, #1e1b4b);
+  text-align: center;
+  border-color: #38bdf8;
+}
+
+.pomo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pomo-badge {
+  font-size: 0.75rem;
+  background: #38bdf8;
+  color: #0f172a;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.pomo-active-task {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pomo-timer-display {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 2px;
+  margin: 10px 0;
+}
+
+.pomo-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pomo-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.pomo-btn.start { background: #10b981; color: white; }
+.pomo-btn.pause { background: #f59e0b; color: white; }
+.pomo-btn.reset { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
+
+.form-group {
+  margin: 12px 0;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+
+.btn:hover { background: #1d4ed8; }
+
+.icon-btn {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+#xp-fill, #goal-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.danger-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.danger-btn:hover { background: #b91c1c; }
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.filter-btn, .tag-filter-btn {
+  background: var(--input-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-btn.active, .tag-filter-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Task Cards */
+.task-item {
+  background: var(--input-bg);
+  border-left: 4px solid #38bdf8;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.tag-label {
+  font-size: 0.7rem;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+.high { background: #ef4444; color: white; }
+.med  { background: #f59e0b; color: white; }
+.low  { background: #10b981; color: white; }
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.task-details {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.action-btn:hover { background: var(--border-color); }
+
+.delete-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.delete-btn:hover { background: #059669; }
+
+/* Backup Section */
+.backup-card h3 { font-size: 0.95rem; margin-bottom: 10px; }
+.backup-actions { display: flex; gap: 10px; }
+
+.secondary-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.secondary-btn:hover { background: var(--border-color); }
+
+/* Level-Up Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #311b92, #1e1b4b);
+  border: 2px solid #8b5cf6;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-badge {
+  display: inline-block;
+  background: #fbbf24;
+  color: #0f172a;
+  font-weight: bold;
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.modal-content h2 { font-size: 2rem; color: #ffffff; margin-bottom: 4px; }
+#modal-rank-text { color: #a7f3d0; font-size: 1rem; font-weight: bold; }
+.modal-sub { color: #cbd5e1; font-size: 0.8rem; margin: 12px 0 16px 0; }
+
+#confetti-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+}
