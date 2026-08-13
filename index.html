@@ -159,15 +159,6 @@
       font-weight: bold;
     }
 
-    .pomo-active-task {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
     .pomo-timer-display {
       font-size: 3rem;
       font-weight: bold;
@@ -191,21 +182,9 @@
       font-size: 0.85rem;
     }
 
-    .pomo-btn.start {
-      background: #10b981;
-      color: white;
-    }
-
-    .pomo-btn.pause {
-      background: #f59e0b;
-      color: white;
-    }
-
-    .pomo-btn.reset {
-      background: var(--input-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-    }
+    .pomo-btn.start { background: #10b981; color: white; }
+    .pomo-btn.pause { background: #f59e0b; color: white; }
+    .pomo-btn.reset { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
 
     /* ==========================================================================
        4. Form Controls & General UI
@@ -255,9 +234,7 @@
       transition: background 0.2s;
     }
 
-    .btn:hover {
-      background: #1d4ed8;
-    }
+    .btn:hover { background: #1d4ed8; }
 
     .icon-btn {
       background: var(--card-bg);
@@ -289,6 +266,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-top: 10px;
     }
 
     .danger-btn {
@@ -301,9 +279,7 @@
       cursor: pointer;
     }
 
-    .danger-btn:hover {
-      background: #b91c1c;
-    }
+    .danger-btn:hover { background: #b91c1c; }
 
     /* Filter Tabs */
     .filter-tabs {
@@ -332,7 +308,7 @@
       border-color: #2563eb;
     }
 
-    /* Task Cards */
+    /* Task Cards & Subtasks */
     .task-item {
       background: var(--input-bg);
       border-left: 4px solid #38bdf8;
@@ -340,44 +316,59 @@
       margin-top: 10px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
+      transition: transform 0.15s ease;
+    }
+
+    .task-item.overdue {
+      border-left-color: #ef4444 !important;
+      background: rgba(239, 68, 68, 0.08);
     }
 
     .task-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 8px;
     }
 
-    .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
-    }
-
-    .tag-label {
+    .category-tag {
       font-size: 0.7rem;
       background: rgba(56, 189, 248, 0.15);
       color: #38bdf8;
       padding: 2px 6px;
       border-radius: 4px;
-      margin-left: 6px;
+      font-weight: bold;
+      white-space: nowrap;
     }
 
-    .high { background: #ef4444; color: white; }
-    .med { background: #f59e0b; color: white; }
-    .low { background: #10b981; color: white; }
+    .due-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--border-color);
+      color: var(--text-muted);
+    }
+
+    .due-badge.overdue-text {
+      color: #ef4444;
+      font-weight: bold;
+      background: rgba(239, 68, 68, 0.2);
+    }
 
     .task-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 10px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .task-details {
+      display: flex;
+      gap: 6px;
+      align-items: center;
       font-size: 0.75rem;
-      color: var(--text-muted);
     }
 
     .delete-btn {
@@ -392,6 +383,100 @@
     }
 
     .delete-btn:hover { background: #059669; }
+
+    /* Subtask Checklist */
+    .subtask-list {
+      margin-top: 8px;
+      padding-left: 4px;
+    }
+
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .subtask-item.completed span {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    /* Eisenhower 2x2 Grid */
+    .eisenhower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 550px) {
+      .eisenhower-grid { grid-template-columns: 1fr; }
+    }
+
+    .quadrant {
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 120px;
+    }
+
+    .quadrant-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .q1 .quadrant-title { color: #ef4444; }
+    .q2 .quadrant-title { color: #38bdf8; }
+    .q3 .quadrant-title { color: #f59e0b; }
+    .q4 .quadrant-title { color: #94a3b8; }
+
+    /* Activity Heatmap */
+    .heatmap-container {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .heatmap-day {
+      flex: 1;
+      height: 28px;
+      border-radius: 4px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .heatmap-day.active-1 { background: #0e4429; color: #a7f3d0; }
+    .heatmap-day.active-2 { background: #006d32; color: #ffffff; }
+    .heatmap-day.active-3 { background: #39d353; color: #0f172a; font-weight: bold; }
+
+    /* Analytics Summary Cards */
+    .analytics-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      text-align: center;
+      background: var(--input-bg);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .analytics-val {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
 
     /* Backup Section */
     .backup-card h3 {
@@ -470,86 +555,6 @@
     .modal-content h2 { font-size: 2rem; color: #ffffff; margin-bottom: 4px; }
     #modal-rank-text { color: #a7f3d0; font-size: 1rem; font-weight: bold; }
     .modal-sub { color: #cbd5e1; font-size: 0.8rem; margin: 12px 0 16px 0; }
-
-    /* ==========================================================================
-       5. Added New Feature Styles (Matrix, Heatmap & Subtasks)
-       ========================================================================== */
-    /* Eisenhower 2x2 Grid */
-    .eisenhower-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 550px) {
-      .eisenhower-grid { grid-template-columns: 1fr; }
-    }
-
-    .quadrant {
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px;
-      min-height: 120px;
-    }
-
-    .quadrant-title {
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .q1 .quadrant-title { color: #ef4444; }
-    .q2 .quadrant-title { color: #38bdf8; }
-    .q3 .quadrant-title { color: #f59e0b; }
-    .q4 .quadrant-title { color: #94a3b8; }
-
-    /* Activity Heatmap */
-    .heatmap-container {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .heatmap-day {
-      flex: 1;
-      height: 28px;
-      border-radius: 4px;
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      color: var(--text-muted);
-    }
-
-    .heatmap-day.active-1 { background: #0e4429; color: #a7f3d0; }
-    .heatmap-day.active-2 { background: #006d32; color: #ffffff; }
-    .heatmap-day.active-3 { background: #39d353; color: #0f172a; font-weight: bold; }
-
-    /* Subtask Checklist */
-    .subtask-list {
-      margin-top: 8px;
-      padding-left: 4px;
-    }
-
-    .subtask-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .subtask-item.completed span {
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
   </style>
 </head>
 <body>
@@ -598,9 +603,25 @@
       </div>
     </div>
 
-    <!-- Productivity Heatmap Card -->
+    <!-- Analytics & Activity Heatmap Card -->
     <div class="card">
-      <h3>📈 7-Day Completion Activity</h3>
+      <h3>📊 Productivity Analytics</h3>
+      <div class="analytics-grid">
+        <div>
+          <div class="analytics-val" id="stat-completed" style="color: #10b981;">0</div>
+          <small style="color: var(--text-muted);">7d Completed</small>
+        </div>
+        <div>
+          <div class="analytics-val" id="stat-pending" style="color: #38bdf8;">0</div>
+          <small style="color: var(--text-muted);">Active Tasks</small>
+        </div>
+        <div>
+          <div class="analytics-val" id="stat-streak" style="color: #f59e0b;">1 Day</div>
+          <small style="color: var(--text-muted);">Streak</small>
+        </div>
+      </div>
+
+      <h4 style="font-size: 0.85rem; margin-top: 14px; color: var(--text-muted);">7-Day Completion Heatmap</h4>
       <div class="heatmap-container" id="heatmap"></div>
     </div>
 
@@ -610,6 +631,21 @@
       <div class="form-group">
         <label>Task Title</label>
         <input type="text" id="task-title" placeholder="e.g. Finish project roadmap" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="task-category">
+            <option value="💼 Work">💼 Work</option>
+            <option value="🏠 Personal">🏠 Personal</option>
+            <option value="🏋️ Health">🏋️ Health</option>
+            <option value="📚 Study">📚 Study</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="task-duedate" />
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -634,10 +670,19 @@
       <button class="btn" onclick="addTask()">Add Task (+20 XP)</button>
     </div>
 
-    <!-- Filter & View Switcher -->
+    <!-- Filter, Search & View Switcher -->
     <div class="list-header">
       <h3>📋 Active Tasks</h3>
       <button class="danger-btn" onclick="clearAllTasks()">Clear All</button>
+    </div>
+
+    <div class="form-group" style="margin-top: 8px;">
+      <input 
+        type="text" 
+        id="search-input" 
+        placeholder="🔍 Search tasks by title or category..." 
+        oninput="handleSearch(this.value)"
+      />
     </div>
     
     <div class="filter-tabs">
@@ -696,6 +741,7 @@
     let xp = parseInt(localStorage.getItem('priomatrix_xp')) || 0;
     let activityLog = JSON.parse(localStorage.getItem('priomatrix_activity')) || {};
     let currentView = 'matrix';
+    let searchQuery = '';
 
     // Pomodoro Variables
     let timer = null;
@@ -719,6 +765,7 @@
       updateGamificationUI();
       renderTasks();
       renderHeatmap();
+      updateAnalytics();
     }
 
     function addXP(amount) {
@@ -735,6 +782,8 @@
     function addTask() {
       initAudio();
       const titleInput = document.getElementById('task-title');
+      const categoryInput = document.getElementById('task-category').value;
+      const dueDateInput = document.getElementById('task-duedate').value;
       const urgentInput = document.getElementById('task-urgent').value === 'true';
       const importantInput = document.getElementById('task-important').value === 'true';
       const subtasksInput = document.getElementById('task-subtasks').value;
@@ -748,6 +797,8 @@
       const newTask = {
         id: Date.now().toString(),
         title: titleInput.value.trim(),
+        category: categoryInput,
+        dueDate: dueDateInput,
         urgent: urgentInput,
         important: importantInput,
         subtasks: subtasks
@@ -756,6 +807,7 @@
       tasks.push(newTask);
       titleInput.value = '';
       document.getElementById('task-subtasks').value = '';
+      document.getElementById('task-duedate').value = '';
 
       addXP(20);
     }
@@ -787,10 +839,26 @@
       }
     }
 
+    function isOverdue(dueDateStr) {
+      if (!dueDateStr) return false;
+      const today = new Date().toISOString().split('T')[0];
+      return dueDateStr < today;
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase();
+      renderTasks();
+    }
+
     // ==========================================================================
     // Render Functions
     // ==========================================================================
     function renderTasks() {
+      const filteredTasks = tasks.filter(task => {
+        return task.title.toLowerCase().includes(searchQuery) || 
+               task.category.toLowerCase().includes(searchQuery);
+      });
+
       if (currentView === 'matrix') {
         document.getElementById('matrix-view').style.display = 'grid';
         document.getElementById('list-view').style.display = 'none';
@@ -802,7 +870,7 @@
 
         q1.innerHTML = q2.innerHTML = q3.innerHTML = q4.innerHTML = '';
 
-        tasks.forEach(task => {
+        filteredTasks.forEach(task => {
           const card = createTaskCardHTML(task);
           if (task.urgent && task.important) q1.innerHTML += card;
           else if (!task.urgent && task.important) q2.innerHTML += card;
@@ -813,14 +881,19 @@
         document.getElementById('matrix-view').style.display = 'none';
         const listView = document.getElementById('list-view');
         listView.style.display = 'block';
-        listView.innerHTML = tasks.length ? '' : '<p style="color:var(--text-muted); font-size:0.85rem;">No tasks added yet.</p>';
-        tasks.forEach(task => {
+        listView.innerHTML = filteredTasks.length ? '' : '<p style="color:var(--text-muted); font-size:0.85rem;">No matching tasks.</p>';
+        filteredTasks.forEach(task => {
           listView.innerHTML += createTaskCardHTML(task);
         });
       }
     }
 
     function createTaskCardHTML(task) {
+      const overdueClass = isOverdue(task.dueDate) ? 'overdue' : '';
+      const overdueBadge = task.dueDate 
+        ? `<span class="due-badge ${isOverdue(task.dueDate) ? 'overdue-text' : ''}">📅 ${task.dueDate} ${isOverdue(task.dueDate) ? '(Overdue)' : ''}</span>`
+        : '';
+
       const subtasksHTML = task.subtasks.map((st, idx) => `
         <div class="subtask-item ${st.completed ? 'completed' : ''}">
           <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', ${idx})" />
@@ -829,13 +902,17 @@
       `).join('');
 
       return `
-        <div class="task-item">
+        <div class="task-item ${overdueClass}">
           <div class="task-header">
             <strong>${task.title}</strong>
+            <span class="category-tag">${task.category || '💼 Work'}</span>
           </div>
           ${task.subtasks.length ? `<div class="subtask-list">${subtasksHTML}</div>` : ''}
           <div class="task-footer">
-            <span class="task-details">${task.urgent ? '⚡ Urgent' : '⏳ Normal'}</span>
+            <div class="task-details">
+              <span>${task.urgent ? '⚡ Urgent' : '⏳ Normal'}</span>
+              ${overdueBadge}
+            </div>
             <button class="delete-btn" onclick="completeTask('${task.id}')">✓ Done (+50 XP)</button>
           </div>
         </div>
@@ -873,6 +950,19 @@
         dayEl.title = `${dateStr}: ${count} completed`;
         container.appendChild(dayEl);
       }
+    }
+
+    function updateAnalytics() {
+      let totalCompleted7Days = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        totalCompleted7Days += (activityLog[dateStr] || 0);
+      }
+
+      document.getElementById('stat-completed').innerText = totalCompleted7Days;
+      document.getElementById('stat-pending').innerText = tasks.length;
     }
 
     function setView(view, btn) {
