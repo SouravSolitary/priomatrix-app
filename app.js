@@ -400,7 +400,6 @@ function updateWeeklyGoalTracker() {
   const progress = userStats.weeklyProgress || 0;
   const pct = Math.min(Math.round((progress / target) * 100), 100);
 
-  document.getElementById('goal-target-num').innerText = target;
   document.getElementById('goal-fill').style.width = `${pct}%`;
   document.getElementById('goal-text').innerText = `${progress} / ${target} tasks completed this week`;
   document.getElementById('goal-percent').innerText = `${pct}%`;

@@ -2,1111 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrioMatrix - Gamified Task & Productivity Hub</title>
-  <style>
-    /* ==========================================================================
-       1. Theme Variables & Base Styles
-       ========================================================================== */
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-      --input-bg: #0f172a;
-    }
-
-    body.light-theme {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --input-bg: #f8fafc;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      background: var(--bg-color);
-      color: var(--text-color);
-      padding: 15px;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .container {
-      max-width: 650px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header h1 {
-      color: #38bdf8;
-      font-size: 1.8rem;
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-top: 4px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid var(--border-color);
-    }
-
-    /* ==========================================================================
-       2. Level & Gamification Card
-       ========================================================================== */
-    .level-card {
-      background: linear-gradient(135deg, #1e1b4b, #311b92);
-      border-color: #6366f1;
-    }
-
-    .level-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .stats-right {
-      text-align: right;
-    }
-
-    .title-badge {
-      font-size: 0.75rem;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 2px 8px;
-      border-radius: 10px;
-      color: #a7f3d0;
-    }
-
-    .streak-badge {
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #ff7849;
-      background: rgba(255, 120, 73, 0.15);
-      padding: 3px 8px;
-      border-radius: 12px;
-      display: inline-block;
-      margin-bottom: 4px;
-    }
-
-    .xp-display {
-      font-size: 1.6rem;
-      font-weight: bold;
-      color: #fbbf24;
-    }
-
-    .level-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .multiplier-tag {
-      background: #10b981;
-      color: #ffffff;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-
-    /* ==========================================================================
-       3. Pomodoro Card
-       ========================================================================== */
-    .pomodoro-card {
-      background: linear-gradient(135deg, #0f172a, #1e1b4b);
-      text-align: center;
-      border-color: #38bdf8;
-    }
-
-    .pomo-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .pomo-badge {
-      font-size: 0.75rem;
-      background: #38bdf8;
-      color: #0f172a;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: bold;
-    }
-
-    .pomo-timer-display {
-      font-size: 3rem;
-      font-weight: bold;
-      color: #ffffff;
-      letter-spacing: 2px;
-      margin: 10px 0;
-    }
-
-    .pomo-controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .pomo-btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .pomo-btn.start { background: #10b981; color: white; }
-    .pomo-btn.pause { background: #f59e0b; color: white; }
-    .pomo-btn.reset { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
-
-    /* ==========================================================================
-       4. Form Controls & General UI
-       ========================================================================== */
-    .form-group {
-      margin: 12px 0;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    .form-row > div {
-      flex: 1;
-    }
-
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: var(--input-bg);
-      color: var(--text-color);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: #2563eb;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
-    }
-
-    .btn:hover { background: #1d4ed8; }
-
-    .icon-btn {
-      background: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 6px 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    #xp-fill {
-      height: 100%;
-      background: #fbbf24;
-      width: 0%;
-      transition: width 0.4s ease;
-    }
-
-    .list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .danger-btn {
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      cursor: pointer;
-    }
-
-    .danger-btn:hover { background: #b91c1c; }
-
-    /* Filter Tabs */
-    .filter-tabs {
-      display: flex;
-      gap: 6px;
-      margin: 10px 0;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .filter-btn {
-      background: var(--input-bg);
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-      padding: 5px 10px;
-      border-radius: 16px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .filter-btn.active {
-      background: #2563eb;
-      color: white;
-      border-color: #2563eb;
-    }
-
-    /* Task Cards & Subtasks */
-    .task-item {
-      background: var(--input-bg);
-      border-left: 4px solid #38bdf8;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      transition: transform 0.15s ease;
-    }
-
-    .task-item.overdue {
-      border-left-color: #ef4444 !important;
-      background: rgba(239, 68, 68, 0.08);
-    }
-
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .category-tag {
-      font-size: 0.7rem;
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-
-    .due-badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--border-color);
-      color: var(--text-muted);
-    }
-
-    .due-badge.overdue-text {
-      color: #ef4444;
-      font-weight: bold;
-      background: rgba(239, 68, 68, 0.2);
-    }
-
-    .task-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .task-details {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      font-size: 0.75rem;
-    }
-
-    .delete-btn {
-      background: #10b981;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .delete-btn:hover { background: #059669; }
-
-    /* Subtask Checklist */
-    .subtask-list {
-      margin-top: 8px;
-      padding-left: 4px;
-    }
-
-    .subtask-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .subtask-item.completed span {
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
-
-    /* Eisenhower 2x2 Grid */
-    .eisenhower-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 550px) {
-      .eisenhower-grid { grid-template-columns: 1fr; }
-    }
-
-    .quadrant {
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px;
-      min-height: 120px;
-    }
-
-    .quadrant-title {
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .q1 .quadrant-title { color: #ef4444; }
-    .q2 .quadrant-title { color: #38bdf8; }
-    .q3 .quadrant-title { color: #f59e0b; }
-    .q4 .quadrant-title { color: #94a3b8; }
-
-    /* Activity Heatmap */
-    .heatmap-container {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .heatmap-day {
-      flex: 1;
-      height: 28px;
-      border-radius: 4px;
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      color: var(--text-muted);
-    }
-
-    .heatmap-day.active-1 { background: #0e4429; color: #a7f3d0; }
-    .heatmap-day.active-2 { background: #006d32; color: #ffffff; }
-    .heatmap-day.active-3 { background: #39d353; color: #0f172a; font-weight: bold; }
-
-    /* Analytics Summary Cards */
-    .analytics-grid {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-      text-align: center;
-      background: var(--input-bg);
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    .analytics-val {
-      font-size: 1.3rem;
-      font-weight: bold;
-    }
-
-    /* Backup Section */
-    .backup-card h3 {
-      font-size: 0.95rem;
-      margin-bottom: 10px;
-    }
-
-    .backup-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .secondary-btn {
-      flex: 1;
-      padding: 8px 12px;
-      background: var(--input-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .secondary-btn:hover { background: var(--border-color); }
-
-    /* Modal Overlay */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      transition: opacity 0.3s ease;
-    }
-
-    .modal-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .modal-content {
-      background: linear-gradient(135deg, #311b92, #1e1b4b);
-      border: 2px solid #8b5cf6;
-      padding: 24px;
-      border-radius: 16px;
-      text-align: center;
-      max-width: 320px;
-      width: 90%;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-      animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    @keyframes modalPop {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .modal-badge {
-      display: inline-block;
-      background: #fbbf24;
-      color: #0f172a;
-      font-weight: bold;
-      font-size: 0.8rem;
-      padding: 4px 12px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-    }
-
-    .modal-content h2 { font-size: 2rem; color: #ffffff; margin-bottom: 4px; }
-    #modal-rank-text { color: #a7f3d0; font-size: 1rem; font-weight: bold; }
-    .modal-sub { color: #cbd5e1; font-size: 0.8rem; margin: 12px 0 16px 0; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <canvas id="confetti-canvas"></canvas>
 
   <div class="container">
     <header>
       <div class="header-top">
         <h1>PrioMatrix</h1>
-        <button class="icon-btn" onclick="toggleTheme()">🌓 Theme</button>
+        <button class="icon-btn" id="theme-toggle">☀️ Light</button>
       </div>
       <p>Gamified Task & Productivity Hub</p>
     </header>
 
-    <!-- Gamification Status Card -->
+    <!-- 🎮 Gamification Dashboard -->
     <div class="card level-card">
       <div class="level-header">
         <div>
-          <span class="streak-badge" id="streak-text">🔥 1 Day Streak</span>
-          <h2 id="level-title" style="color:white; font-size: 1.2rem;">Level 1 Novice</h2>
+          <span class="streak-badge" id="streak-display">🔥 0 Day Streak</span>
+          <h2 id="player-level" style="color:white; font-size: 1.2rem;">Level 1</h2>
         </div>
         <div class="stats-right">
-          <span class="title-badge" id="rank-badge">Tier I</span>
-          <div class="xp-display"><span id="xp-val">0</span> <small style="font-size:0.8rem;">XP</small></div>
+          <span class="title-badge" id="player-title">Rank: Novice Planner</span>
+          <div class="xp-display"><span id="total-xp">0</span> <small style="font-size:0.8rem;">XP</small></div>
         </div>
       </div>
       <div class="progress-bar">
         <div id="xp-fill"></div>
       </div>
       <div class="level-footer">
-        <span>Next Level: <span id="next-xp">100</span> XP</span>
-        <span class="multiplier-tag">1.0x XP Multiplier</span>
+        <span id="xp-next">0 / 500 XP to Level 2</span>
+        <span class="multiplier-tag" id="multiplier-badge">1.0x XP</span>
       </div>
     </div>
 
-    <!-- Pomodoro Focus Timer Card -->
+    <!-- ⏱️ Pomodoro Focus Timer -->
     <div class="card pomodoro-card">
       <div class="pomo-header">
-        <span class="pomo-badge">FOCUS TIMER</span>
-        <button class="icon-btn" onclick="requestNotificationPermission()">🔔 Notify</button>
+        <span class="pomo-badge" id="pomo-status" style="background:#38bdf8;">Work Session</span>
+        <span class="pomo-active-task" id="pomo-task-name">Active Task: None</span>
       </div>
-      <div class="pomo-timer-display" id="timer-display">25:00</div>
+      <div class="pomo-timer-display" id="pomo-display">25:00</div>
       <div class="pomo-controls">
-        <button class="pomo-btn start" onclick="startTimer()">Start</button>
-        <button class="pomo-btn pause" onclick="pauseTimer()">Pause</button>
-        <button class="pomo-btn reset" onclick="resetTimer()">Reset</button>
+        <button class="pomo-btn start" id="pomo-start-btn">Start</button>
+        <button class="pomo-btn pause" id="pomo-pause-btn" style="display:none;">Pause</button>
+        <button class="pomo-btn reset" id="pomo-reset-btn">Reset</button>
       </div>
     </div>
 
-    <!-- Analytics & Activity Heatmap Card -->
+    <!-- 🎯 Weekly Goal Progress -->
     <div class="card">
-      <h3>📊 Productivity Analytics</h3>
-      <div class="analytics-grid">
-        <div>
-          <div class="analytics-val" id="stat-completed" style="color: #10b981;">0</div>
-          <small style="color: var(--text-muted);">7d Completed</small>
-        </div>
-        <div>
-          <div class="analytics-val" id="stat-pending" style="color: #38bdf8;">0</div>
-          <small style="color: var(--text-muted);">Active Tasks</small>
-        </div>
-        <div>
-          <div class="analytics-val" id="stat-streak" style="color: #f59e0b;">1 Day</div>
-          <small style="color: var(--text-muted);">Streak</small>
-        </div>
+      <div class="list-header">
+        <h3>🎯 Weekly Target</h3>
+        <button class="icon-btn" id="edit-goal-btn">⚙️ Edit Goal</button>
       </div>
-
-      <h4 style="font-size: 0.85rem; margin-top: 14px; color: var(--text-muted);">7-Day Completion Heatmap</h4>
-      <div class="heatmap-container" id="heatmap"></div>
+      <div class="progress-bar" style="margin-top: 10px; background: rgba(255,255,255,0.05);">
+        <div id="goal-fill" style="background: #10b981; width: 0%;"></div>
+      </div>
+      <div class="level-footer" style="margin-top: 6px; color: var(--text-muted);">
+        <span id="goal-text">0 / 10 tasks completed this week</span>
+        <span id="goal-percent" style="font-weight: bold; color: #10b981;">0%</span>
+      </div>
     </div>
 
-    <!-- Task Input Form -->
+    <!-- 📊 Productivity Chart -->
+    <div class="card">
+      <div class="list-header">
+        <h3>📊 7-Day Efficiency Trend</h3>
+        <span id="today-efficiency" style="font-size: 0.8rem; color: #38bdf8; font-weight: bold;">Today: 0%</span>
+      </div>
+      <div style="height: 180px; margin-top: 10px;">
+        <canvas id="efficiencyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ➕ Add Task Form -->
     <div class="card">
       <h3>➕ Create Task</h3>
-      <div class="form-group">
-        <label>Task Title</label>
-        <input type="text" id="task-title" placeholder="e.g. Finish project roadmap" />
-      </div>
-      <div class="form-row">
+      <form id="task-form">
         <div class="form-group">
-          <label>Category</label>
-          <select id="task-category">
-            <option value="💼 Work">💼 Work</option>
-            <option value="🏠 Personal">🏠 Personal</option>
-            <option value="🏋️ Health">🏋️ Health</option>
-            <option value="📚 Study">📚 Study</option>
+          <label>Task Title</label>
+          <input type="text" id="title" required placeholder="e.g., Refactor API Integration" />
+        </div>
+        <div class="form-group">
+          <label>Category Tag</label>
+          <select id="tag">
+            <option value="Work">💼 Work</option>
+            <option value="Personal">👤 Personal</option>
+            <option value="Study">📚 Study</option>
+            <option value="Health">🏋️ Health</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Impact Rating: <span id="impact-val" style="color:#38bdf8; font-weight:bold;">3</span> / 5</label>
+          <input type="range" id="impact" min="1" max="5" value="3" />
+        </div>
+        <div class="form-group">
+          <label>Confidence: <span id="conf-val" style="color:#10b981; font-weight:bold;">80%</span></label>
+          <input type="range" id="confidence" min="10" max="100" step="10" value="80" />
+        </div>
+        <div class="form-group">
+          <label>Estimated Effort (Hours)</label>
+          <input type="number" id="effort" min="0.5" step="0.5" value="1" required />
         </div>
         <div class="form-group">
           <label>Due Date</label>
-          <input type="date" id="task-duedate" />
+          <input type="date" id="due-date" required />
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Urgency</label>
-          <select id="task-urgent">
-            <option value="true">Urgent</option>
-            <option value="false">Not Urgent</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Importance</label>
-          <select id="task-important">
-            <option value="true">Important</option>
-            <option value="false">Not Important</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Subtasks (comma separated)</label>
-        <input type="text" id="task-subtasks" placeholder="e.g. Outline draft, Review code" />
-      </div>
-      <button class="btn" onclick="addTask()">Add Task (+20 XP)</button>
+        <button type="submit" class="btn">Add Task to Matrix</button>
+      </form>
     </div>
 
-    <!-- Filter, Search & View Switcher -->
-    <div class="list-header">
-      <h3>📋 Active Tasks</h3>
-      <button class="danger-btn" onclick="clearAllTasks()">Clear All</button>
+    <!-- 📋 Task List & Filters -->
+    <div class="list-header" style="margin-top: 20px;">
+      <h3>📋 Prioritized Tasks</h3>
+      <button class="danger-btn" id="clear-all-btn">Clear All</button>
     </div>
 
-    <div class="form-group" style="margin-top: 8px;">
-      <input 
-        type="text" 
-        id="search-input" 
-        placeholder="🔍 Search tasks by title or category..." 
-        oninput="handleSearch(this.value)"
-      />
-    </div>
-    
+    <!-- Priority Filters -->
     <div class="filter-tabs">
-      <button class="filter-btn active" onclick="setView('matrix', this)">Eisenhower Matrix</button>
-      <button class="filter-btn" onclick="setView('list', this)">Simple List</button>
+      <button class="filter-btn active" data-filter="all">All Priorities</button>
+      <button class="filter-btn" data-filter="high">🔥 Do First</button>
+      <button class="filter-btn" data-filter="med">📅 Schedule</button>
+      <button class="filter-btn" data-filter="low">💡 Backlog</button>
     </div>
 
-    <!-- Task Display Containers -->
-    <div id="matrix-view" class="eisenhower-grid">
-      <div class="quadrant q1">
-        <div class="quadrant-title">🔥 Urgent & Important (Do)</div>
-        <div id="q1-list"></div>
-      </div>
-      <div class="quadrant q2">
-        <div class="quadrant-title">📅 Not Urgent & Important (Schedule)</div>
-        <div id="q2-list"></div>
-      </div>
-      <div class="quadrant q3">
-        <div class="quadrant-title">⚡ Urgent & Not Important (Delegate)</div>
-        <div id="q3-list"></div>
-      </div>
-      <div class="quadrant q4">
-        <div class="quadrant-title">☕ Not Urgent & Not Important (Delete)</div>
-        <div id="q4-list"></div>
-      </div>
+    <!-- Tag Filters -->
+    <div class="filter-tabs">
+      <button class="tag-filter-btn active" data-tag="all">All Tags</button>
+      <button class="tag-filter-btn" data-tag="Work">💼 Work</button>
+      <button class="tag-filter-btn" data-tag="Personal">👤 Personal</button>
+      <button class="tag-filter-btn" data-tag="Study">📚 Study</button>
+      <button class="tag-filter-btn" data-tag="Health">🏋️ Health</button>
     </div>
 
-    <div id="list-view" style="display:none;"></div>
+    <div id="task-list"></div>
 
-    <!-- Backup Section -->
+    <!-- 💾 Data Management -->
     <div class="card backup-card" style="margin-top:20px;">
       <h3>💾 Data Management</h3>
       <div class="backup-actions">
-        <button class="secondary-btn" onclick="exportData()">Export Data</button>
-        <button class="secondary-btn" onclick="importData()">Import Data</button>
+        <button class="secondary-btn" id="export-btn">Export Backup</button>
+        <button class="secondary-btn" id="import-btn-trigger">Import Data</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;" />
       </div>
     </div>
   </div>
 
-  <!-- Level-Up Modal Overlay -->
-  <div class="modal-overlay hidden" id="level-modal">
+  <!-- 🏆 Level-Up Modal -->
+  <div class="modal-overlay hidden" id="levelup-modal">
     <div class="modal-content">
       <span class="modal-badge">LEVEL UP!</span>
-      <h2 id="modal-lvl">Level 2</h2>
-      <p id="modal-rank-text">Rank: Apprentice</p>
-      <p class="modal-sub">You earned bonus XP & unlocked new status!</p>
-      <button class="btn" onclick="closeModal()">Awesome!</button>
+      <h2 id="modal-level-title">Level 2!</h2>
+      <p id="modal-rank-text">Rank: Focus Apprentice</p>
+      <p class="modal-sub">You earned bonus XP & unlocked new rank status!</p>
+      <button class="btn" id="modal-close-btn">Awesome!</button>
     </div>
   </div>
 
+  <script src="app.js"></script>
   <script>
-    // ==========================================================================
-    // State & Persistent Storage Initialization
-    // ==========================================================================
-    let tasks = JSON.parse(localStorage.getItem('priomatrix_tasks')) || [];
-    let xp = parseInt(localStorage.getItem('priomatrix_xp')) || 0;
-    let activityLog = JSON.parse(localStorage.getItem('priomatrix_activity')) || {};
-    let currentView = 'matrix';
-    let searchQuery = '';
-
-    // Pomodoro Variables
-    let timer = null;
-    let timeLeft = 25 * 60;
-
-    // Web Audio Setup
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = null;
-
-    function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Registration failed', err));
     }
-
-    // ==========================================================================
-    // Core Application Logic
-    // ==========================================================================
-    function saveState() {
-      localStorage.setItem('priomatrix_tasks', JSON.stringify(tasks));
-      localStorage.setItem('priomatrix_xp', xp.toString());
-      localStorage.setItem('priomatrix_activity', JSON.stringify(activityLog));
-      updateGamificationUI();
-      renderTasks();
-      renderHeatmap();
-      updateAnalytics();
-    }
-
-    function addXP(amount) {
-      let oldLevel = Math.floor(xp / 100) + 1;
-      xp += amount;
-      let newLevel = Math.floor(xp / 100) + 1;
-      
-      if (newLevel > oldLevel) {
-        triggerLevelUp(newLevel);
-      }
-      saveState();
-    }
-
-    function addTask() {
-      initAudio();
-      const titleInput = document.getElementById('task-title');
-      const categoryInput = document.getElementById('task-category').value;
-      const dueDateInput = document.getElementById('task-duedate').value;
-      const urgentInput = document.getElementById('task-urgent').value === 'true';
-      const importantInput = document.getElementById('task-important').value === 'true';
-      const subtasksInput = document.getElementById('task-subtasks').value;
-
-      if (!titleInput.value.trim()) return alert('Please enter a task title.');
-
-      const subtasks = subtasksInput
-        ? subtasksInput.split(',').map(s => ({ text: s.trim(), completed: false })).filter(s => s.text)
-        : [];
-
-      const newTask = {
-        id: Date.now().toString(),
-        title: titleInput.value.trim(),
-        category: categoryInput,
-        dueDate: dueDateInput,
-        urgent: urgentInput,
-        important: importantInput,
-        subtasks: subtasks
-      };
-
-      tasks.push(newTask);
-      titleInput.value = '';
-      document.getElementById('task-subtasks').value = '';
-      document.getElementById('task-duedate').value = '';
-
-      addXP(20);
-    }
-
-    function completeTask(id) {
-      initAudio();
-      playTaskCompleteSound();
-
-      // Log activity for heatmap
-      const today = new Date().toISOString().split('T')[0];
-      activityLog[today] = (activityLog[today] || 0) + 1;
-
-      tasks = tasks.filter(t => t.id !== id);
-      addXP(50);
-    }
-
-    function toggleSubtask(taskId, index) {
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.subtasks[index]) {
-        task.subtasks[index].completed = !task.subtasks[index].completed;
-        saveState();
-      }
-    }
-
-    function clearAllTasks() {
-      if (confirm("Clear all tasks?")) {
-        tasks = [];
-        saveState();
-      }
-    }
-
-    function isOverdue(dueDateStr) {
-      if (!dueDateStr) return false;
-      const today = new Date().toISOString().split('T')[0];
-      return dueDateStr < today;
-    }
-
-    function handleSearch(val) {
-      searchQuery = val.toLowerCase();
-      renderTasks();
-    }
-
-    // ==========================================================================
-    // Render Functions
-    // ==========================================================================
-    function renderTasks() {
-      const filteredTasks = tasks.filter(task => {
-        return task.title.toLowerCase().includes(searchQuery) || 
-               task.category.toLowerCase().includes(searchQuery);
-      });
-
-      if (currentView === 'matrix') {
-        document.getElementById('matrix-view').style.display = 'grid';
-        document.getElementById('list-view').style.display = 'none';
-
-        const q1 = document.getElementById('q1-list');
-        const q2 = document.getElementById('q2-list');
-        const q3 = document.getElementById('q3-list');
-        const q4 = document.getElementById('q4-list');
-
-        q1.innerHTML = q2.innerHTML = q3.innerHTML = q4.innerHTML = '';
-
-        filteredTasks.forEach(task => {
-          const card = createTaskCardHTML(task);
-          if (task.urgent && task.important) q1.innerHTML += card;
-          else if (!task.urgent && task.important) q2.innerHTML += card;
-          else if (task.urgent && !task.important) q3.innerHTML += card;
-          else q4.innerHTML += card;
-        });
-      } else {
-        document.getElementById('matrix-view').style.display = 'none';
-        const listView = document.getElementById('list-view');
-        listView.style.display = 'block';
-        listView.innerHTML = filteredTasks.length ? '' : '<p style="color:var(--text-muted); font-size:0.85rem;">No matching tasks.</p>';
-        filteredTasks.forEach(task => {
-          listView.innerHTML += createTaskCardHTML(task);
-        });
-      }
-    }
-
-    function createTaskCardHTML(task) {
-      const overdueClass = isOverdue(task.dueDate) ? 'overdue' : '';
-      const overdueBadge = task.dueDate 
-        ? `<span class="due-badge ${isOverdue(task.dueDate) ? 'overdue-text' : ''}">📅 ${task.dueDate} ${isOverdue(task.dueDate) ? '(Overdue)' : ''}</span>`
-        : '';
-
-      const subtasksHTML = task.subtasks.map((st, idx) => `
-        <div class="subtask-item ${st.completed ? 'completed' : ''}">
-          <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', ${idx})" />
-          <span>${st.text}</span>
-        </div>
-      `).join('');
-
-      return `
-        <div class="task-item ${overdueClass}">
-          <div class="task-header">
-            <strong>${task.title}</strong>
-            <span class="category-tag">${task.category || '💼 Work'}</span>
-          </div>
-          ${task.subtasks.length ? `<div class="subtask-list">${subtasksHTML}</div>` : ''}
-          <div class="task-footer">
-            <div class="task-details">
-              <span>${task.urgent ? '⚡ Urgent' : '⏳ Normal'}</span>
-              ${overdueBadge}
-            </div>
-            <button class="delete-btn" onclick="completeTask('${task.id}')">✓ Done (+50 XP)</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function updateGamificationUI() {
-      const level = Math.floor(xp / 100) + 1;
-      const currentLevelXP = xp % 100;
-
-      document.getElementById('xp-val').innerText = xp;
-      document.getElementById('level-title').innerText = `Level ${level} Adventurer`;
-      document.getElementById('next-xp').innerText = level * 100;
-      document.getElementById('xp-fill').style.width = `${currentLevelXP}%`;
-    }
-
-    function renderHeatmap() {
-      const container = document.getElementById('heatmap');
-      container.innerHTML = '';
-
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        const count = activityLog[dateStr] || 0;
-
-        const dayEl = document.createElement('div');
-        dayEl.className = 'heatmap-day';
-        
-        if (count >= 5) dayEl.classList.add('active-3');
-        else if (count >= 3) dayEl.classList.add('active-2');
-        else if (count >= 1) dayEl.classList.add('active-1');
-
-        dayEl.innerText = d.toLocaleDateString('en-US', { weekday: 'narrow' });
-        dayEl.title = `${dateStr}: ${count} completed`;
-        container.appendChild(dayEl);
-      }
-    }
-
-    function updateAnalytics() {
-      let totalCompleted7Days = 0;
-      for (let i = 0; i < 7; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        totalCompleted7Days += (activityLog[dateStr] || 0);
-      }
-
-      document.getElementById('stat-completed').innerText = totalCompleted7Days;
-      document.getElementById('stat-pending').innerText = tasks.length;
-    }
-
-    function setView(view, btn) {
-      currentView = view;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderTasks();
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle('light-theme');
-    }
-
-    // ==========================================================================
-    // Audio & Sound Effects
-    // ==========================================================================
-    function playTaskCompleteSound() {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
-
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
-    }
-
-    function playLevelUpSound() {
-      if (!audioCtx) return;
-      const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
-      notes.forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.1 + 0.2);
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        osc.start(audioCtx.currentTime + i * 0.1);
-        osc.stop(audioCtx.currentTime + i * 0.1 + 0.2);
-      });
-    }
-
-    // ==========================================================================
-    // Notifications & Pomodoro
-    // ==========================================================================
-    function requestNotificationPermission() {
-      if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
-      }
-    }
-
-    function startTimer() {
-      initAudio();
-      if (timer) return;
-      timer = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          updateTimerDisplay();
-        } else {
-          clearInterval(timer);
-          timer = null;
-          playLevelUpSound();
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Pomodoro Complete! ⏱️", { body: "Take a 5-minute break." });
-          }
-        }
-      }, 1000);
-    }
-
-    function pauseTimer() {
-      clearInterval(timer);
-      timer = null;
-    }
-
-    function resetTimer() {
-      pauseTimer();
-      timeLeft = 25 * 60;
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-      const s = (timeLeft % 60).toString().padStart(2, '0');
-      document.getElementById('timer-display').innerText = `${m}:${s}`;
-    }
-
-    // ==========================================================================
-    // Modal & Data Backup
-    // ==========================================================================
-    function triggerLevelUp(level) {
-      playLevelUpSound();
-      document.getElementById('modal-lvl').innerText = `Level ${level}`;
-      document.getElementById('level-modal').classList.remove('hidden');
-    }
-
-    function closeModal() {
-      document.getElementById('level-modal').classList.add('hidden');
-    }
-
-    function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ tasks, xp, activityLog }));
-      const dlAnchor = document.createElement('a');
-      dlAnchor.setAttribute("href", dataStr);
-      dlAnchor.setAttribute("download", "priomatrix_backup.json");
-      dlAnchor.click();
-    }
-
-    function importData() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.onchange = e => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.readAsText(file, 'UTF-8');
-        reader.onload = readerEvent => {
-          try {
-            const content = JSON.parse(readerEvent.target.result);
-            if (content.tasks) tasks = content.tasks;
-            if (content.xp) xp = content.xp;
-            if (content.activityLog) activityLog = content.activityLog;
-            saveState();
-            alert("Data imported successfully!");
-          } catch (err) {
-            alert("Invalid JSON file.");
-          }
-        };
-      };
-      input.click();
-    }
-
-    // Initial Load
-    saveState();
   </script>
 </body>
 </html>

@@ -65,7 +65,7 @@ header p {
   border: 1px solid var(--border-color);
 }
 
-/* Level & Gamification Card */
+/* Gamification Card */
 .level-card {
   background: linear-gradient(135deg, #1e1b4b, #311b92);
   border-color: #6366f1;
@@ -138,7 +138,6 @@ header p {
 
 .pomo-badge {
   font-size: 0.75rem;
-  background: #38bdf8;
   color: #0f172a;
   padding: 2px 8px;
   border-radius: 10px;
@@ -244,6 +243,10 @@ input[type="range"] {
 #xp-fill, #goal-fill {
   height: 100%;
   transition: width 0.4s ease;
+}
+
+#xp-fill {
+  background: #fbbf24;
 }
 
 .list-header {
